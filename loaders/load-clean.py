@@ -5,14 +5,21 @@ Created on Mon Nov  1 12:14:15 2021
 @author: CharlesBray
 """
 
-# Import libraries
+# Set the current working directory to the project's root
+# and make all module imports relative to root
 import os
+import decouple
+config = decouple.AutoConfig(' ')
+os.chdir(config('ROOT_DIRECTORY'))
 import sys
+sys.path.insert(0, '')
+
+# Import libraries
 import itertools
 import math
 import numpy as np
 import pandas as pd
-import fasttrack as ft
+import tutorials.fast_track_tutorial.fasttrack as ft
 import json
 
 from datetime import datetime, timedelta
@@ -23,26 +30,24 @@ from sklearn.preprocessing import MinMaxScaler
 
 '''
 Load AU race data from earliest month available to present in batches using 
-the FastTrack API wrapper and save to the folder ../data/raw/ and append to dataframes.
+the FastTrack API wrapper and save to the folder ./data/raw/ and append to dataframes.
 If the raw data has been previously loaded then skip and append to dataframes.
 '''
 
-# Load secret key
-with open('./secrets.json') as f:
-    data = json.load(f)
-    key = str(data['key'])
+# Load environment variables
+FASTTRACK_KEY = config('FASTTRACK_KEY')
 
 # Validate FastTrack API connection
-client = ft.Fasttrack(key)
+client = ft.Fasttrack(FASTTRACK_KEY)
 track_codes = client.listTracks()
 
 # Import race data excluding NZ races
 au_tracks_filter = list(track_codes[track_codes['state'] != 'NZ']['track_code'])
 
 # create a data directory to store raw and clean data
-if not os.path.exists('../data/'):
-    os.makedirs('../data/raw/')
-    os.makedirs('../data/clean/')
+if not os.path.exists('./data/'):
+    os.makedirs('./data/raw/')
+    os.makedirs('./data/clean/')
 
 # Time window to import data
 # First day of month that we have access to data
@@ -63,8 +68,8 @@ for start in pd.date_range(date_from, date_to, freq='MS'):
         filename_races = f'FT_AU_RACES_{start_date}.csv'
         filename_dogs = f'FT_AU_DOGS_{start_date}.csv'
 
-        filepath_races = f'../data/raw/{filename_races}'
-        filepath_dogs = f'../data/raw/{filename_dogs}'
+        filepath_races = f'./data/raw/{filename_races}'
+        filepath_dogs = f'./data/raw/{filename_dogs}'
 
         print(f'Loading data from {start_date} to {end_date}')
         if os.path.isfile(filepath_races):
@@ -84,7 +89,7 @@ for start in pd.date_range(date_from, date_to, freq='MS'):
         print(f'Could not load data from {start_date} to {end_date}')
         
 '''
-Clean raw data and store as a single .csv in ../data/clean
+Clean raw data and store as a single .csv in ./data/clean
 '''
 
 # Clean up the race dataset
@@ -123,7 +128,5 @@ dog_results['TrainerName'] = dog_results['TrainerName'].apply(lambda x: x.upper(
 # Remove columns that are empty
 dog_results = dog_results.drop(['Handicap', 'Comments'], axis=1)
 
-# Save to ../data/clean/ directory
-dog_results.to_csv('../data/clean/dog_results.csv', index=False)
-
-display(dog_results)
+# Save to ./data/clean/ directory
+dog_results.to_csv('./data/clean/dog_results.csv', index=False)
