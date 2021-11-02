@@ -1,12 +1,21 @@
 # this wrapper is provided to make it easier to use the FastTrack API
 # it is provided on an as is basis no liability is taken for any errors or issues incurred
 
+# Set the current working directory to the project's root
+# and make all module imports relative to root
+import os
+import decouple
+config = decouple.AutoConfig(' ')
+os.chdir(config('ROOT_DIRECTORY'))
+import sys
+sys.path.insert(0, '')
+
 import urllib
 import xmltodict
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
-import mapping
+import tutorials.fast_track_tutorial.mapping as mapping
 from tqdm import tqdm
 import time
 

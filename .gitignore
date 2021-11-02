@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Data directory
+data/
+
+# All local undertakings that are not ready to be shared
+experimental/
