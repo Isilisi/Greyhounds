@@ -108,7 +108,7 @@ dog_results = dog_results.merge(
     on = 'FastTrack_RaceId'
 )
 
-# Convert StartPrice to probability
+# Clean StartPrice column
 dog_results['StartPrice'] = dog_results['StartPrice'].apply(lambda x: None if x is None else float(x.replace('$', '').replace('F', '')) if isinstance(x, str) else x)
 
 # Discard entries without results (scratched or did not finish)
@@ -127,6 +127,9 @@ dog_results['TrainerName'] = dog_results['TrainerName'].apply(lambda x: x.upper(
 
 # Remove columns that are empty
 dog_results = dog_results.drop(['Handicap', 'Comments'], axis=1)
+
+# Remove races with no track/distance data (1 race)
+dog_results = dog_results[~dog_results['TrackDist'].isna()]
 
 # Save to ./data/clean/ directory
 dog_results.to_csv('./data/clean/dog_results.csv', index=False)
