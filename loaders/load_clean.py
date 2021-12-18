@@ -95,7 +95,7 @@ Clean raw data and store as a single .csv in ./data/clean
 # Clean up the race dataset
 race_details = race_details.rename(columns = {'@id': 'FastTrack_RaceId'})
 race_details['Distance'] = race_details['Distance'].apply(lambda x: int(x.replace("m", "")))
-race_details['date_dt'] = pd.to_datetime(race_details['date'], format = '%d %b %y')
+race_details['RaceDate'] = pd.to_datetime(race_details['date'], format = '%d %b %y')
 race_details['TrackDist'] = race_details['Track'] + race_details['Distance'].astype(str)
 
 # Clean up the dogs results dataset
@@ -103,7 +103,7 @@ dog_results = dog_results.rename(columns = {'@id': 'FastTrack_DogId', 'RaceId': 
 
 # Combine dogs results with race attributes
 dog_results = dog_results.merge(
-    race_details[['FastTrack_RaceId', 'Distance', 'RaceGrade', 'Track', 'RaceNum', 'TrackDist', 'date_dt']], 
+    race_details[['FastTrack_RaceId', 'Distance', 'RaceGrade', 'Track', 'RaceNum', 'TrackDist', 'RaceDate']], 
     how = 'left',
     on = 'FastTrack_RaceId'
 )
@@ -121,7 +121,7 @@ dog_results['SplitMargin'] = dog_results['SplitMargin'].astype(float)
 dog_results['Prizemoney'] = dog_results['Prizemoney'].astype(float).fillna(0)
 dog_results['Place'] = pd.to_numeric(dog_results['Place'].apply(lambda x: x.replace("=", "") if isinstance(x, str) else x), errors='coerce')
 dog_results = dog_results[~dog_results['Place'].isna()]
-dog_results['win'] = dog_results['Place'].apply(lambda x: 1 if x == 1 else 0)
+dog_results['Place'] = dog_results['Place'].astype(int)
 dog_results['DogName'] = dog_results['DogName'].apply(lambda x: x.upper() if type(x) == str else x)
 dog_results['TrainerName'] = dog_results['TrainerName'].apply(lambda x: x.upper() if type(x) == str else x)
 
@@ -130,6 +130,17 @@ dog_results = dog_results.drop(['Handicap', 'Comments'], axis=1)
 
 # Remove races with no track/distance data (1 race)
 dog_results = dog_results[~dog_results['TrackDist'].isna()]
+
+# Fix 4 weights that are over 50 or under 10
+dog_results.loc[dog_results.Weight == 366.5, 'Weight'] = 36.5
+dog_results.loc[dog_results.Weight == 304.0, 'Weight'] = 30.4
+dog_results.loc[dog_results.Weight == 3.8, 'Weight'] = 38.0
+
+# Ensure consistent naming style
+dog_results = dog_results.rename(columns = {
+    "FastTrack_DogId" : "FasttrackDogId",
+    "FastTrack_RaceId" : "FasttrackRaceId"
+})
 
 # Save to ./data/clean/ directory
 dog_results.to_csv('./data/clean/dog_results.csv', index=False)
