@@ -92,6 +92,26 @@ for start in pd.date_range(date_from, date_to, freq='MS'):
 Clean raw data and store as a single .csv in ./data/clean
 '''
 
+# Remove NaN tracks
+race_details = race_details[~race_details['Track'].isna()]
+# Clean track names (e.g. Sandown (SAP) -> Sandown Park)
+def track_clean(track_str):
+    '''
+    Distinct track entries map to the same track.
+    This function attempts to fix this problem by mapping to the correct track.
+    '''
+    # Sandown
+    if track_str == 'Sandown (SAP)':
+        return 'Sandown Park'
+    # The Meadows
+    elif track_str == 'Meadows (MEP)':
+        return 'The Meadows'
+    # Murray Bridge
+    elif track_str in ['Murray Bridge (MBR)', 'Murray Bridge (MBS)']:
+        return 'Murray Bridge'
+    return track_str
+race_details['Track'] = race_details['Track'].apply(lambda x: track_clean(x))
+
 # Clean up the race dataset
 race_details = race_details.rename(columns = {'@id': 'FastTrack_RaceId'})
 race_details['Distance'] = race_details['Distance'].apply(lambda x: int(x.replace("m", "")))
