@@ -162,5 +162,9 @@ dog_results = dog_results.rename(columns = {
     "FastTrack_RaceId" : "FasttrackRaceId"
 })
 
+# Add a FieldSize column (number of runners in a race) and take only races with at least 2 greyhounds (removed ~100 rows)
+dog_results['FieldSize'] = dog_results.groupby('FasttrackRaceId')['FasttrackDogId'].transform('nunique')
+dog_results = dog_results[dog_results['FieldSize'] > 1]
+
 # Save to ./data/clean/ directory
 dog_results.to_csv('./data/clean/dog_results.csv', index=False)
